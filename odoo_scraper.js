@@ -121,10 +121,10 @@ async function scrapeTaxes(page) {
 
    const typeText = cells[4]?.innerText?.trim().toLowerCase() || '';
     const typeMap = {
-      'sales': 'sales',
-      'ventes': 'sales',
-      'purchases': 'purchases',
-      'achats': 'purchases',
+      'sales': 'Sales',
+      'ventes': 'Sales',
+      'purchases': 'Purchases',
+      'achats': 'Purchases',
       'none': 'none',
       'aucun': 'none'
     };
