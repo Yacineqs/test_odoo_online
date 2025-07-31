@@ -119,7 +119,7 @@ async function scrapeTaxes(page) {
     const amountText = invoiceLabel.match(/([\d.]+)\s*%/)?.[1] || '0';
     const amount = parseFloat(amountText);
 
-   const typeText = cells[3]?.innerText?.trim().toLowerCase() || '';
+   const typeText = cells[4]?.innerText?.trim().toLowerCase() || '';
     const typeMap = {
       'sales': 'sale',
       'ventes': 'sale',
