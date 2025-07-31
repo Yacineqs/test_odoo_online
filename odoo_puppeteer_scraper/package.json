@@ -1,0 +1,13 @@
+{
+  "name": "odoo-puppeteer-scraper",
+  "version": "1.0.0",
+  "main": "scheduler.js",
+  "scripts": {
+    "start": "node scheduler.js"
+  },
+  "dependencies": {
+    "node-cron": "^3.0.2",
+    "puppeteer": "^22.0.0",
+    "csv-writer": "^1.6.0"
+  }
+}
