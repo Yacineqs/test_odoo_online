@@ -110,14 +110,15 @@ async function scrapeTaxes(page) {
     const rows = Array.from(document.querySelectorAll('.o_data_row'));
     return rows.map(row => {
       const cells = row.querySelectorAll('td');
-      const name = cells[2]?.innerText?.trim() || '';
+      const name = cells[0]?.innerText?.trim() || '';  // First column: Tax Name
       
-      // Extraire le montant numérique seulement
-      const amountText = cells[6]?.innerText?.match(/(\d+\.?\d*)/)?.[0] || '0';
-      const amount = parseFloat(amountText);
+      // Extract amount from the correct column (usually index 1 for Amount)
+      const amountText = cells[1]?.innerText?.trim() || '0';
+      // Remove percentage sign and convert to float
+      const amount = parseFloat(amountText.replace('%', ''));
 
-      // Mapper aux valeurs Odoo standard
-      const typeText = cells[4]?.innerText?.trim().toLowerCase() || '';
+      // Extract tax type from correct column (usually index 2 or 3)
+      const typeText = cells[2]?.innerText?.trim().toLowerCase() || '';
       const typeMap = {
         'sales': 'sale',
         'ventes': 'sale',
@@ -135,7 +136,6 @@ async function scrapeTaxes(page) {
   console.log('✅ Scraped tax data:', taxes);
   return taxes;
 }
-
 
 
 
