@@ -103,39 +103,46 @@ async function scrapeView(page, {
 async function scrapeTaxes(page) {
   console.log('📊 Scraping taxes...');
   await page.goto(`${url}/web#action=account.action_tax_form`, { waitUntil: 'networkidle2' });
-  await page.waitForSelector('.o_data_row', { visible: true, timeout: 10000 });
-  await delay(2000);
+
+  await page.waitForSelector('.o_data_row', { timeout: 10000 });
+  await delay(2000); // petite pause pour assurer le rendu
 
   const taxes = await page.evaluate(() => {
-    const rows = Array.from(document.querySelectorAll('.o_data_row'));
-    return rows.map(row => {
-      const cells = row.querySelectorAll('td');
-      const name = cells[0]?.innerText?.trim() || '';  // First column: Tax Name
-      
-      // Extract amount from the correct column (usually index 1 for Amount)
-      const amountText = cells[1]?.innerText?.trim() || '0';
-      // Remove percentage sign and convert to float
-      const amount = parseFloat(amountText.replace('%', ''));
+  const rows = Array.from(document.querySelectorAll('.o_data_row'));
 
-      // Extract tax type from correct column (usually index 2 or 3)
-      const typeText = cells[2]?.innerText?.trim().toLowerCase() || '';
-      const typeMap = {
-        'sales': 'sale',
-        'ventes': 'sale',
-        'purchases': 'purchase',
-        'achats': 'purchase',
-        'none': 'none',
-        'aucun': 'none'
-      };
-      const type_tax_use = typeMap[typeText] || 'none';
+  return rows.map(row => {
+    const cells = row.querySelectorAll('td');
 
-      return { name, amount, type_tax_use };
-    });
+    const name = cells[2]?.innerText?.trim() || '';
+    const invoiceLabel = cells[6]?.innerText?.trim() || name;
+
+    const amountText = invoiceLabel.match(/([\d.]+)\s*%/)?.[1] || '0';
+    const amount = parseFloat(amountText);
+
+   const typeText = cells[4]?.innerText?.trim().toLowerCase() || '';
+    const typeMap = {
+      'sales': 'Sales',
+      'ventes': 'Sales',
+      'purchases': 'Purchases',
+      'achats': 'Purchases',
+      'none': 'none',
+      'aucun': 'none'
+    };
+    const type_tax_use = typeMap[typeText] || 'none';
+
+    return {
+      name,
+      amount: isNaN(amount) ? 0 : amount,
+      type_tax_use
+    };
   });
+});
+
 
   console.log('✅ Scraped tax data:', taxes);
   return taxes;
 }
+
 
 
 
