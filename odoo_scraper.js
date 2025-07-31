@@ -111,27 +111,19 @@ async function scrapeTaxes(page) {
     const rows = Array.from(document.querySelectorAll('.o_data_row'));
     return rows.map(row => {
       const cells = row.querySelectorAll('td');
-      const cellTexts = Array.from(cells).map(c => c.innerText.trim());
-      console.log('🔍 Tax Row:', cellTexts);
-
-      // Adjust column indexes based on actual order
-      const name = cellTexts[0] || '';  // or try [1] or [2] depending on what prints
-      const amountText = cellTexts[1]?.replace(',', '.').replace('%', '') || '0';
+      const name = cells[1]?.innerText?.trim() || '';
+      const amountText = cells[2]?.innerText?.trim().replace(',', '.').replace('%', '') || '0';
       const amount = parseFloat(amountText);
-      const usageText = cellTexts[2]?.toLowerCase() || '';
-
+      const usageText = cells[3]?.innerText?.toLowerCase() || '';
       const type_tax_use = usageText.includes('achat') ? 'purchase'
                          : usageText.includes('vente') ? 'sale'
                          : 'none';
-
       return { name, amount, type_tax_use };
     });
   });
 
   return taxes;
 }
-
-
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
