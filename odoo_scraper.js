@@ -108,30 +108,29 @@ async function scrapeTaxes(page) {
   await delay(2000); // petite pause pour assurer le rendu
 
   const taxes = await page.evaluate(() => {
-    const rows = Array.from(document.querySelectorAll('.o_data_row'));
+  const rows = Array.from(document.querySelectorAll('.o_data_row'));
 
-    return rows.map(row => {
-      const cells = row.querySelectorAll('td');
+  return rows.map(row => {
+    const cells = row.querySelectorAll('td');
 
-      // Index basé sur ton HTML : 0 = checkbox, 1 = sequence, 2 = name, 3 = description, 4 = type_tax_use
-      const name = cells[2]?.innerText?.trim() || '';
-      const invoiceLabel = cells[6]?.innerText?.trim() || name; // fallback
+    const name = cells[2]?.innerText?.trim() || '';
+    const invoiceLabel = cells[6]?.innerText?.trim() || name;
 
-      const amountText = invoiceLabel.match(/([\d.]+)\s*%/)?.[1] || '0';
-      const amount = parseFloat(amountText);
+    const amountText = invoiceLabel.match(/([\d.]+)\s*%/)?.[1] || '0';
+    const amount = parseFloat(amountText);
 
-      const usageText = cells[4]?.innerText?.trim().toLowerCase() || '';
-      const type_tax_use = usageText.includes('achat') ? 'purchase'
-        : usageText.includes('vente') ? 'sale'
-        : 'none';
+    // ✅ Récupération du champ technique "type"
+    const typeCell = row.querySelector('td[data-name="type_tax_use"]');
+    const type_tax_use = typeCell?.getAttribute('data-value') || 'none';
 
-      return {
-        name,
-        amount: isNaN(amount) ? 0 : amount,
-        type_tax_use
-      };
-    });
+    return {
+      name,
+      amount: isNaN(amount) ? 0 : amount,
+      type_tax_use
+    };
   });
+});
+
 
   console.log('✅ Scraped tax data:', taxes);
   return taxes;
