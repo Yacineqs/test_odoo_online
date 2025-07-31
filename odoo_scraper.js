@@ -105,7 +105,7 @@ async function scrapeTaxes(page) {
   await page.goto(`${url}/web#action=account.action_tax_form`, { waitUntil: 'networkidle2' });
 
   await page.waitForSelector('.o_data_row', { timeout: 10000 });
-  await new Promise(resolve => setTimeout(resolve, 2000)); // Manual delay
+  await delay(2000); // petite pause pour assurer le rendu
 
   const taxes = await page.evaluate(() => {
     const rows = Array.from(document.querySelectorAll('.o_data_row'));
@@ -113,14 +113,17 @@ async function scrapeTaxes(page) {
     return rows.map(row => {
       const cells = row.querySelectorAll('td');
 
-      const name = cells[1]?.innerText?.trim() || ''; // ✅ Invoice Label (usually 2nd column)
-      const amountText = name.match(/([\d.]+)\s*%/)?.[1] || '0'; // Extract % from name like "5% GST"
+      // Index basé sur ton HTML : 0 = checkbox, 1 = sequence, 2 = name, 3 = description, 4 = type_tax_use
+      const name = cells[2]?.innerText?.trim() || '';
+      const invoiceLabel = cells[6]?.innerText?.trim() || name; // fallback
+
+      const amountText = invoiceLabel.match(/([\d.]+)\s*%/)?.[1] || '0';
       const amount = parseFloat(amountText);
 
-      const usageText = cells[4]?.innerText?.trim().toLowerCase() || ''; // Vente / Achat / None
+      const usageText = cells[4]?.innerText?.trim().toLowerCase() || '';
       const type_tax_use = usageText.includes('achat') ? 'purchase'
-                           : usageText.includes('vente') ? 'sale'
-                           : 'none';
+        : usageText.includes('vente') ? 'sale'
+        : 'none';
 
       return {
         name,
@@ -133,6 +136,7 @@ async function scrapeTaxes(page) {
   console.log('✅ Scraped tax data:', taxes);
   return taxes;
 }
+
 
 
 
