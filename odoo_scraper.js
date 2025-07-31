@@ -109,27 +109,28 @@ async function scrapeTaxes(page) {
   await new Promise(resolve => setTimeout(resolve, 2000)); // ✅ Manual delay
 
   const taxes = await page.evaluate(() => {
-    const rows = Array.from(document.querySelectorAll('.o_data_row'));
+  const rows = Array.from(document.querySelectorAll('table.o_list_view tbody tr'));
+  return rows.map(row => {
+    const cells = row.querySelectorAll('td');
 
-    return rows.map(row => {
-      const cells = row.querySelectorAll('td');
+    const name = cells[1]?.innerText.trim(); // Usually 2nd column is name
+    const label = name || '';
+    const amountMatch = label.match(/([\d.]+)%/);
+    const amount = amountMatch ? parseFloat(amountMatch[1]) : 0;
 
-      const name = cells[2]?.innerText?.trim() || ''; // Tax name
-      const amountText = cells[3]?.innerText?.trim().replace('%', '').replace(',', '.') || '0'; // Description column
-      const amount = parseFloat(amountText); // Could fallback to 0
+    const typeText = cells[3]?.innerText.trim().toLowerCase(); // Example: "Sales", "Purchases"
+    let type_tax_use = 'none';
+    if (typeText.includes('sale')) type_tax_use = 'sale';
+    else if (typeText.includes('purchase')) type_tax_use = 'purchase';
 
-      const usageText = cells[4]?.innerText?.trim().toLowerCase() || ''; // Type: Vente / Achat
-      const type_tax_use = usageText.includes('achat') ? 'purchase'
-                           : usageText.includes('vente') ? 'sale'
-                           : 'none';
-
-      return {
-        name,
-        amount: isNaN(amount) ? 0 : amount,
-        type_tax_use
-      };
-    });
+    return {
+      name: label,
+      amount: amount,
+      type_tax_use: type_tax_use
+    };
   });
+});
+
 
   console.log('✅ Scraped tax data:', taxes);
   return taxes;
