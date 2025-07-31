@@ -119,9 +119,16 @@ async function scrapeTaxes(page) {
     const amountText = invoiceLabel.match(/([\d.]+)\s*%/)?.[1] || '0';
     const amount = parseFloat(amountText);
 
-    // ✅ Récupération du champ technique "type"
-    const typeCell = row.querySelector('td[data-name="type_tax_use"]');
-    const type_tax_use = typeCell?.getAttribute('data-value') || 'none';
+   const typeText = cells[3]?.innerText?.trim().toLowerCase() || '';
+    const typeMap = {
+      'sales': 'sale',
+      'ventes': 'sale',
+      'purchases': 'purchase',
+      'achats': 'purchase',
+      'none': 'none',
+      'aucun': 'none'
+    };
+    const type_tax_use = typeMap[typeText] || 'none';
 
     return {
       name,
