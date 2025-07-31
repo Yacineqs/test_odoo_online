@@ -105,13 +105,16 @@ async function scrapeTaxes(page) {
   await page.goto(`${url}/web#action=account.action_tax_form`, { waitUntil: 'networkidle2' });
 
   await page.waitForSelector('.o_data_row', { timeout: 10000 });
-  await delay(2000); // petite pause pour assurer le rendu
+  await new Promise(resolve => setTimeout(resolve, 2000)); // Pause pour chargement complet
 
   const taxes = await page.evaluate(() => {
     const rows = Array.from(document.querySelectorAll('.o_data_row'));
 
     return rows
-      .filter(row => !row.classList.contains('o_inactive')) // ✅ Only active
+      .filter(row => {
+        const checkbox = row.querySelectorAll('td')[7]?.querySelector('input[type="checkbox"]');
+        return checkbox && checkbox.checked; // ✅ Only if active is true
+      })
       .map(row => {
         const cells = row.querySelectorAll('td');
 
@@ -140,6 +143,7 @@ async function scrapeTaxes(page) {
   console.log('✅ Scraped active tax data:', taxes);
   return taxes;
 }
+
 
 
 
