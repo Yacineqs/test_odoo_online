@@ -1,5 +1,6 @@
 const express = require('express');
-const runScraper = require('./scheduler'); // assuming scheduler.js exports a function
+const runScraper = require('./odoo_scraper'); // or './odoo_scraper.js'
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
