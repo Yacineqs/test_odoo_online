@@ -111,14 +111,14 @@ async function scrapeTaxes(page) {
     const rows = Array.from(document.querySelectorAll('.o_data_row'));
     return rows.map(row => {
       const cells = row.querySelectorAll('td');
+      const cellTexts = Array.from(cells).map(c => c.innerText.trim());
+      console.log('🔍 Tax Row:', cellTexts);
 
-      // Log full row cells to debug structure
-      console.log('🔎 Tax Row:', Array.from(cells).map(c => c.innerText));
-
-      const name = cells[0]?.innerText?.trim() || ''; // try column 0
-      const amountText = cells[1]?.innerText?.trim().replace(',', '.').replace('%', '') || '0';
+      // Adjust column indexes based on actual order
+      const name = cellTexts[0] || '';  // or try [1] or [2] depending on what prints
+      const amountText = cellTexts[1]?.replace(',', '.').replace('%', '') || '0';
       const amount = parseFloat(amountText);
-      const usageText = cells[2]?.innerText?.toLowerCase() || ''; // check which is actually type
+      const usageText = cellTexts[2]?.toLowerCase() || '';
 
       const type_tax_use = usageText.includes('achat') ? 'purchase'
                          : usageText.includes('vente') ? 'sale'
@@ -130,6 +130,7 @@ async function scrapeTaxes(page) {
 
   return taxes;
 }
+
 
 
 function delay(ms) {
