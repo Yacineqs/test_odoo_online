@@ -1,8 +1,9 @@
-const runScraper = require('./odoo_scraper');
+async function runScraper() {
+  // your scraping logic here...
+}
 
-(async () => {
-  console.log('⏰ Starting one-time Odoo scrape...');
-  await runScraper();
-  console.log('✅ Scrape complete, exiting.');
-  process.exit(0);
-})();
+module.exports = runScraper;
+
+if (require.main === module) {
+  runScraper(); // still allows local testing
+}
