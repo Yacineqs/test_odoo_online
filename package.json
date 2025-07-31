@@ -1,9 +1,9 @@
 {
   "name": "odoo-puppeteer-scraper",
   "version": "1.0.0",
-  "main": "scheduler.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node scheduler.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "node-cron": "^3.0.2",
