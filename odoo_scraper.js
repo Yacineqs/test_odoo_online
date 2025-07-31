@@ -101,47 +101,46 @@ async function scrapeView(page, {
   return countOnly ? data.length : data;
 }
 async function scrapeTaxes(page) {
-  console.log('📊 Scraping taxes...');
+  console.log('📊 Scraping active taxes...');
   await page.goto(`${url}/web#action=account.action_tax_form`, { waitUntil: 'networkidle2' });
 
   await page.waitForSelector('.o_data_row', { timeout: 10000 });
   await delay(2000); // petite pause pour assurer le rendu
 
   const taxes = await page.evaluate(() => {
-  const rows = Array.from(document.querySelectorAll('.o_data_row'));
+    const rows = Array.from(document.querySelectorAll('.o_data_row'));
 
-  return rows.map(row => {
-    const cells = row.querySelectorAll('td');
+    return rows
+      .filter(row => !row.classList.contains('o_inactive')) // ✅ Only active
+      .map(row => {
+        const cells = row.querySelectorAll('td');
 
-    const name = cells[2]?.innerText?.trim() || '';
-    const invoiceLabel = cells[6]?.innerText?.trim() || name;
+        const name = cells[2]?.innerText?.trim() || '';
+        const invoice_label = cells[6]?.innerText?.trim() || '';
 
-    const amountText = invoiceLabel.match(/([\d.]+)\s*%/)?.[1] || '0';
-    const amount = parseFloat(amountText);
+        const typeText = cells[4]?.innerText?.trim().toLowerCase() || '';
+        const typeMap = {
+          'sales': 'sale',
+          'ventes': 'sale',
+          'purchases': 'purchase',
+          'achats': 'purchase',
+          'none': 'none',
+          'aucun': 'none'
+        };
+        const type_tax_use = typeMap[typeText] || 'none';
 
-   const typeText = cells[4]?.innerText?.trim().toLowerCase() || '';
-    const typeMap = {
-      'sales': 'Sales',
-      'ventes': 'Sales',
-      'purchases': 'Purchases',
-      'achats': 'Purchases',
-      'none': 'none',
-      'aucun': 'none'
-    };
-    const type_tax_use = typeMap[typeText] || 'none';
-
-    return {
-      name,
-      amount: isNaN(amount) ? 0 : amount,
-      type_tax_use
-    };
+        return {
+          name,
+          invoice_label,
+          type_tax_use
+        };
+      });
   });
-});
 
-
-  console.log('✅ Scraped tax data:', taxes);
+  console.log('✅ Scraped active tax data:', taxes);
   return taxes;
 }
+
 
 
 
