@@ -111,19 +111,23 @@ async function scrapeTaxes(page) {
     const rows = Array.from(document.querySelectorAll('.o_data_row'));
     return rows.map(row => {
       const cells = row.querySelectorAll('td');
-      const name = cells[1]?.innerText?.trim() || '';
-      const amountText = cells[2]?.innerText?.trim().replace(',', '.').replace('%', '') || '0';
+      
+      // Adjust column indexes if necessary
+      const name = cells[0]?.innerText?.trim() || '';  // Try cell[0] for name
+      const amountText = cells[1]?.innerText?.trim().replace(',', '.').replace('%', '') || '0'; // Try cell[1]
       const amount = parseFloat(amountText);
-      const usageText = cells[3]?.innerText?.toLowerCase() || '';
+      const usageText = cells[2]?.innerText?.toLowerCase() || ''; // Try cell[2]
+      
       const type_tax_use = usageText.includes('achat') ? 'purchase'
-                         : usageText.includes('vente') ? 'sale'
-                         : 'none';
+                           : usageText.includes('vente') ? 'sale'
+                           : 'none';
       return { name, amount, type_tax_use };
     });
   });
 
   return taxes;
 }
+
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
