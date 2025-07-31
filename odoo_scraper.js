@@ -34,12 +34,15 @@ async function runScraper() {
       countOnly: true,
     });
 
+    const taxes = await scrapeTaxes(page);
+
     console.log('✅ Scrape complete, exiting.');
 
     return {
       contacts: contactCount,
       draft_sales: draftSalesCount,
       draft_purchases: draftPurchasesCount,
+      taxes: taxes,
     };
 
   } catch (err) {
@@ -75,7 +78,7 @@ async function scrapeView(page, {
   await page.goto(`${url}/${actionUrl}`, { waitUntil: 'networkidle2' });
 
   await page.waitForSelector('.o_data_row', { timeout: 10000 });
-  await delay(2000); // just to be safe
+  await delay(2000); 
 
   const data = await page.evaluate((filterStatus) => {
     const rows = Array.from(document.querySelectorAll('.o_data_row'));
@@ -98,14 +101,40 @@ async function scrapeView(page, {
   return countOnly ? data.length : data;
 }
 
+async function scrapeTaxes(page) {
+  console.log('📊 Scraping taxes...');
+  await page.goto(`${url}/web#action=account.action_tax_form`, { waitUntil: 'networkidle2' });
+  await page.waitForSelector('.o_data_row', { timeout: 10000 });
+  await delay(2000);
+
+  const taxes = await page.evaluate(() => {
+    const rows = Array.from(document.querySelectorAll('.o_data_row'));
+    return rows.map(row => {
+      const cells = row.querySelectorAll('td');
+      const name = cells[1]?.innerText?.trim() || '';
+      const amountText = cells[2]?.innerText?.trim().replace(',', '.').replace('%', '') || '0';
+      const amount = parseFloat(amountText);
+      const usageText = cells[3]?.innerText?.toLowerCase() || '';
+      const type_tax_use = usageText.includes('achat') ? 'purchase'
+                         : usageText.includes('vente') ? 'sale'
+                         : 'none';
+      return { name, amount, type_tax_use };
+    });
+  });
+
+  return taxes;
+}
+
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 module.exports = runScraper;
 
-// Optional: Run directly from CLI
+// Optional CLI mode
 if (require.main === module) {
   console.log('⏰ Starting one-time Odoo scrape...');
-  runScraper().then(console.log).catch(console.error);
+  runScraper().then(result => {
+    console.log('📦 Final Result:', result);
+  }).catch(console.error);
 }
