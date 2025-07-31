@@ -19,7 +19,6 @@ async function runScraper() {
       actionUrl: 'web#action=base.action_partner_form&view_type=list',
       countOnly: true,
     });
-    console.log(`📇 Number of Contacts: ${contactCount}`);
 
     const draftSalesCount = await scrapeView(page, {
       name: 'sales',
@@ -27,7 +26,6 @@ async function runScraper() {
       filterStatus: 'draft',
       countOnly: true,
     });
-    console.log(`🛒 Draft Sale Invoices: ${draftSalesCount}`);
 
     const draftPurchasesCount = await scrapeView(page, {
       name: 'purchases',
@@ -35,11 +33,18 @@ async function runScraper() {
       filterStatus: 'draft',
       countOnly: true,
     });
-    console.log(`📦 Draft Vendor Bills: ${draftPurchasesCount}`);
 
     console.log('✅ Scrape complete, exiting.');
+
+    return {
+      contacts: contactCount,
+      draft_sales: draftSalesCount,
+      draft_purchases: draftPurchasesCount,
+    };
+
   } catch (err) {
     console.error('❌ Scraping error:', err);
+    throw err;
   } finally {
     await browser.close();
   }
@@ -68,8 +73,9 @@ async function scrapeView(page, {
 }) {
   console.log(`📄 Navigating to ${name} list...`);
   await page.goto(`${url}/${actionUrl}`, { waitUntil: 'networkidle2' });
+
   await page.waitForSelector('.o_data_row', { timeout: 10000 });
-  await delay(2000);
+  await delay(2000); // just to be safe
 
   const data = await page.evaluate((filterStatus) => {
     const rows = Array.from(document.querySelectorAll('.o_data_row'));
@@ -98,8 +104,8 @@ function delay(ms) {
 
 module.exports = runScraper;
 
-// If run directly
+// Optional: Run directly from CLI
 if (require.main === module) {
   console.log('⏰ Starting one-time Odoo scrape...');
-  runScraper();
+  runScraper().then(console.log).catch(console.error);
 }
