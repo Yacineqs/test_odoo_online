@@ -100,37 +100,35 @@ async function scrapeView(page, {
 
   return countOnly ? data.length : data;
 }
-
 async function scrapeTaxes(page) {
   console.log('📊 Scraping taxes...');
   await page.goto(`${url}/web#action=account.action_tax_form`, { waitUntil: 'networkidle2' });
 
   await page.waitForSelector('.o_data_row', { timeout: 10000 });
-  await new Promise(resolve => setTimeout(resolve, 2000)); // ✅ Manual delay
+  await new Promise(resolve => setTimeout(resolve, 2000)); // Manual delay
 
   const taxes = await page.evaluate(() => {
-  const rows = Array.from(document.querySelectorAll('table.o_list_view tbody tr'));
-  return rows.map(row => {
-    const cells = row.querySelectorAll('td');
+    const rows = Array.from(document.querySelectorAll('.o_data_row'));
 
-    const name = cells[1]?.innerText.trim(); // Usually 2nd column is name
-    const label = name || '';
-    const amountMatch = label.match(/([\d.]+)%/);
-    const amount = amountMatch ? parseFloat(amountMatch[1]) : 0;
+    return rows.map(row => {
+      const cells = row.querySelectorAll('td');
 
-    const typeText = cells[3]?.innerText.trim().toLowerCase(); // Example: "Sales", "Purchases"
-    let type_tax_use = 'none';
-    if (typeText.includes('sale')) type_tax_use = 'sale';
-    else if (typeText.includes('purchase')) type_tax_use = 'purchase';
+      const name = cells[1]?.innerText?.trim() || ''; // ✅ Invoice Label (usually 2nd column)
+      const amountText = name.match(/([\d.]+)\s*%/)?.[1] || '0'; // Extract % from name like "5% GST"
+      const amount = parseFloat(amountText);
 
-    return {
-      name: label,
-      amount: amount,
-      type_tax_use: type_tax_use
-    };
+      const usageText = cells[4]?.innerText?.trim().toLowerCase() || ''; // Vente / Achat / None
+      const type_tax_use = usageText.includes('achat') ? 'purchase'
+                           : usageText.includes('vente') ? 'sale'
+                           : 'none';
+
+      return {
+        name,
+        amount: isNaN(amount) ? 0 : amount,
+        type_tax_use
+      };
+    });
   });
-});
-
 
   console.log('✅ Scraped tax data:', taxes);
   return taxes;
