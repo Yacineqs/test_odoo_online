@@ -106,7 +106,7 @@ async function scrapeTaxes(page) {
   await page.goto(`${url}/web#action=account.action_tax_form`, { waitUntil: 'networkidle2' });
 
   await page.waitForSelector('.o_data_row', { timeout: 10000 });
-  await page.waitForTimeout(2000); // Let the table fully render
+  await new Promise(resolve => setTimeout(resolve, 2000)); // ✅ Manual delay
 
   const taxes = await page.evaluate(() => {
     const rows = Array.from(document.querySelectorAll('.o_data_row'));
@@ -114,11 +114,11 @@ async function scrapeTaxes(page) {
     return rows.map(row => {
       const cells = row.querySelectorAll('td');
 
-      const name = cells[2]?.innerText?.trim() || ''; // Column 2 = Tax Name
-      const amountText = cells[3]?.innerText?.trim().replace('%', '').replace(',', '.') || '0'; // Column 3 = Description, may contain %
-      const amount = parseFloat(amountText); // If not available here, you can skip and use 0
-      
-      const usageText = cells[4]?.innerText?.trim().toLowerCase() || ''; // Column 4 = type_tax_use
+      const name = cells[2]?.innerText?.trim() || ''; // Tax name
+      const amountText = cells[3]?.innerText?.trim().replace('%', '').replace(',', '.') || '0'; // Description column
+      const amount = parseFloat(amountText); // Could fallback to 0
+
+      const usageText = cells[4]?.innerText?.trim().toLowerCase() || ''; // Type: Vente / Achat
       const type_tax_use = usageText.includes('achat') ? 'purchase'
                            : usageText.includes('vente') ? 'sale'
                            : 'none';
@@ -134,6 +134,7 @@ async function scrapeTaxes(page) {
   console.log('✅ Scraped tax data:', taxes);
   return taxes;
 }
+
 
 
 function delay(ms) {
