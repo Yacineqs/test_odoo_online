@@ -1,8 +1,8 @@
 const puppeteer = require('puppeteer');
 
-const url = 'https://qorelis-test-bsi5-staging24-07-22286992.dev.odoo.com';
-const username = 'admin';
-const password = 'test';
+const url = 'https://test-enterprise.odoo.com';
+const username = 'yaciine_19@outlook.fr';
+const password = 'test123456789';
 
 async function runScraper() {
   const browser = await puppeteer.launch({
